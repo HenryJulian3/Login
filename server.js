@@ -8,8 +8,15 @@ require('dotenv').config();
 
 const app = express();
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, 'public'))); // Asegura que sirva archivos estáticos
+
 app.get('/favicon.ico', (req, res) => res.status(204).end());
+
+// Ruta para servir index.html en la raíz
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 const pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
@@ -29,9 +36,11 @@ app.post('/register', async (req, res) => {
         );
         res.status(201).json({ message: 'Usuario registrado', userId: result.rows[0].id });
     } catch (err) {
-        res.status(500).json({ message: 'Error al registrar usuario' });
+        console.error("Error en /register:", err); // 👈 Agrega este log
+        res.status(500).json({ message: 'Error al registrar usuario', error: err.message });
     }
 });
+
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
@@ -55,4 +64,5 @@ app.post('/login', async (req, res) => {
     }
 });
 
-app.listen(3000, () => console.log('Servidor corriendo en http://localhost:3000'));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
